@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          git fetch --tags
+          TAG=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag is $TAG"
+          echo "tag=$TAG" >> $GITHUB_ENV
+
+      - name: Extract version numbers
+        id: extract
+        run: |
+          MAJOR=$(echo $TAG | cut -d. -f1 | sed 's/v//')
+          MINOR=$(echo $TAG | cut -d. -f2)
+          PATCH=$(echo $TAG | cut -d. -f3)
+          echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+          echo "MINOR=$MINOR" >> $GITHUB_ENV
+          echo "PATCH=$PATCH" >> $GITHUB_ENV
+
+      - name: Calculate new version
+        id: calculate
+        run: |
+          PR_TITLE=$(git log -1 --pretty=%B)
+          echo "PR title: $PR_TITLE"
+
+          if [[ "$PR_TITLE" == *"[MAJOR]"* ]]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [[ "$PR_TITLE" == *"[MINOR]"* ]]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          elif [[ "$PR_TITLE" == *"[PATCH]"* ]]; then
+            PATCH=$((PATCH + 1))
+          else
+            echo "No valid version bump keyword found in PR title. Exiting."
+            exit 1
+          fi
+
+          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+          echo "New tag will be $NEW_TAG"
+          echo "new_tag=$NEW_TAG" >> $GITHUB_ENV
+
+      - name: Create new tag
+        run: |
+          git config user.name "zumodeus"
+          git config user.email "zumodeus@gmail.com"
+          git tag $new_tag
+      
+      - name: Push new tag
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: |
+          git remote set-url origin "https://zumodeus:${GITHUB_TOKEN}@github.com/zumodeus/clip.git"
+          git push origin $new_tag
+    
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.new_tag }}
+          release_name: "Release ${{ env.new_tag }}"
+          body: |
+            ## Changes
+            - Auto-generated release for version ${{ env.new_tag }}
+          draft: false
+          prerelease: false
