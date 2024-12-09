@@ -28,9 +28,9 @@ jobs:
       - name: Extract version numbers
         id: extract
         run: |
-          MAJOR=$(echo $TAG | cut -d. -f1 | sed 's/v//')
-          MINOR=$(echo $TAG | cut -d. -f2)
-          PATCH=$(echo $TAG | cut -d. -f3)
+          MAJOR=$(echo ${{env.tag}} | cut -d. -f1 | sed 's/v//')
+          MINOR=$(echo ${{env.tag}} | cut -d. -f2)
+          PATCH=$(echo ${{env.tag}} | cut -d. -f3)
           echo "MAJOR=$MAJOR" >> $GITHUB_ENV
           echo "MINOR=$MINOR" >> $GITHUB_ENV
           echo "PATCH=$PATCH" >> $GITHUB_ENV
