@@ -22,7 +22,7 @@ func (c *clip) Parse(args []string) {
 
 func (c *clip) ErrorCatcher() {
 	if err, ok := recover().(exception); ok {
-		fmt.Printf("\033[0;31m%s: %s\033[0m\n\n", err.typeof, err.message)
+		fmt.Printf("%s: %s\n\n", err.typeof, err.message)
 		if err.shouldPrintHelp {
 			printHelp(err.command)
 		}
