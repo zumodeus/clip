@@ -23,17 +23,17 @@ jobs:
           git fetch --tags
           TAG=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null || echo "v0.0.0")
           echo "Latest tag is $TAG"
-          echo "tag=$TAG" >> $GITHUB_ENV
+          echo "tag=$TAG" >> $GITHUB_STATE
 
       - name: Extract version numbers
         id: extract
         run: |
-          MAJOR=$(echo ${{env.tag}} | cut -d. -f1 | sed 's/v//')
-          MINOR=$(echo ${{env.tag}} | cut -d. -f2)
-          PATCH=$(echo ${{env.tag}} | cut -d. -f3)
-          echo "MAJOR=$MAJOR" >> $GITHUB_ENV
-          echo "MINOR=$MINOR" >> $GITHUB_ENV
-          echo "PATCH=$PATCH" >> $GITHUB_ENV
+          MAJOR=$(echo $TAG | cut -d. -f1 | sed 's/v//')
+          MINOR=$(echo $TAG | cut -d. -f2)
+          PATCH=$(echo $TAG | cut -d. -f3)
+          echo "MAJOR=$MAJOR" >> $GITHUB_STATE
+          echo "MINOR=$MINOR" >> $GITHUB_STATE
+          echo "PATCH=$PATCH" >> $GITHUB_STATE
 
       - name: Calculate new version
         id: calculate
@@ -57,7 +57,7 @@ jobs:
 
           NEW_TAG="v$MAJOR.$MINOR.$PATCH"
           echo "New tag will be $NEW_TAG"
-          echo "new_tag=$NEW_TAG" >> $GITHUB_ENV
+          echo "new_tag=$NEW_TAG" >> $GITHUB_STATE
 
       - name: Create new tag
         run: |
